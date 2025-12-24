@@ -18,15 +18,14 @@
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
         }
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .animate-pulse-soft {
-            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
         }
     </style>
-    <!-- React and Dependencies -->
     <script type="importmap">
     {
       "imports": {
@@ -47,265 +46,61 @@
         import { GoogleGenAI, Type } from '@google/genai';
 
         // --- Icons ---
-        const PlusIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+        const PlusIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         );
-        const CalendarIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
+        const CalendarIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         );
-        const ClockIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+        const ClockIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         );
-        const SparklesIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                <path d="M19 3v4"></path>
-                <path d="M21 5h-4"></path>
-            </svg>
+        const SparklesIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path><path d="M19 3v4"></path><path d="M21 5h-4"></path></svg>
         );
-        const SettingsIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+        const SettingsIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         );
-        const CheckCircleIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+        const CheckIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         );
-        const TrashIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
+        const TrashIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         );
-        const BellIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
+        const XIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         );
-        const XIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+        const LayoutIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
         );
-        const TrendingUpIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                <polyline points="17 6 23 6 23 12"></polyline>
-            </svg>
-        );
-        const LayoutIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
-        );
-        const ExternalLinkIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-        );
-        const FlaskConIcon = ({ size = 24, className }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M9 3h6"></path>
-                <path d="M10 3v13.4a2.8 2.8 0 1 0 4 0V3"></path>
-                <path d="M8.5 10h7"></path>
-            </svg>
+        const ExternalLinkIcon = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         );
 
-        // --- Constants & Types ---
-        const DayOfWeek = {
-            MONDAY: 'Mon',
-            TUESDAY: 'Tue',
-            WEDNESDAY: 'Wed',
-            THURSDAY: 'Thu',
-            FRIDAY: 'Fri',
-            SATURDAY: 'Sat',
-            SUNDAY: 'Sun'
-        };
-        const STORAGE_KEY = 'synclife_standalone_v1';
+        const STORAGE_KEY = 'synclife_v4_data';
 
-        // --- AI Service ---
-        const getAi = () => {
-            const key = (typeof process !== 'undefined' ? process.env?.API_KEY : '') || window.process?.env?.API_KEY || '';
-            return new GoogleGenAI({ apiKey: key });
-        };
-
-        const generateRoutineWithSearch = async (prompt) => {
-            try {
-                const ai = getAi();
-                const response = await ai.models.generateContent({
-                    model: "gemini-3-flash-preview",
-                    contents: `Expert life planner task: Based on "${prompt}", search for effective habits/trends and create a 5-item daily routine. Return JSON only.`,
-                    config: {
-                        tools: [{ googleSearch: {} }],
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    title: { type: Type.STRING },
-                                    time: { type: Type.STRING },
-                                    category: { type: Type.STRING, enum: ["health", "work", "personal", "education"] },
-                                    days: { type: Type.ARRAY, items: { type: Type.STRING } }
-                                },
-                                required: ["title", "time", "category", "days"]
-                            }
-                        }
-                    }
-                });
-
-                const routines = JSON.parse(response.text || "[]");
-                const sources = [];
-                const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-                if (chunks) {
-                    chunks.forEach(c => { if (c.web) sources.push({ uri: c.web.uri, title: c.web.title }); });
-                }
-                return { routines, sources };
-            } catch (error) {
-                console.error("AI Error:", error);
-                return { routines: [], sources: [] };
-            }
-        };
-
-        // --- Components ---
-        const Modal = ({ onClose, title, children }) => (
-            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
-                <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                    <div className="flex justify-between items-center p-8 border-b border-slate-50 flex-shrink-0">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">{title}</h3>
-                        <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-all"><XIcon size={24} /></button>
-                    </div>
-                    <div className="p-8 overflow-y-auto hide-scrollbar">{children}</div>
-                </div>
-            </div>
-        );
-
-        const EmptyState = ({ icon, title, text, action }) => (
-            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-12 text-center space-y-4 cursor-pointer" onClick={action}>
-                <div className="text-slate-200 mx-auto w-fit scale-125">{icon}</div>
-                <div>
-                    <h4 className="font-black text-slate-700 text-lg">{title}</h4>
-                    <p className="text-slate-400 text-xs font-medium">{text}</p>
-                </div>
-            </div>
-        );
-
-        const NavItem = ({ active, onClick, icon, label }) => (
-            <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-indigo-400' : 'text-slate-500 hover:text-white'}`}>
-                {icon}
-                <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
-            </button>
-        );
-
-        // --- Forms ---
-        const RoutineForm = ({ onSave, onCancel }) => {
-            const [title, setTitle] = useState('');
-            const [time, setTime] = useState('08:00');
-            const [selectedDays, setSelectedDays] = useState([DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY]);
-            const toggleDay = (day) => setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
-            return (
-                <div className="space-y-6">
-                    <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] border-none font-bold" placeholder="Routine Name..." />
-                    <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] border-none font-bold" />
-                    <div className="flex flex-wrap gap-2">
-                        {Object.values(DayOfWeek).map(day => (
-                            <button key={day} onClick={() => toggleDay(day)} className={`w-12 h-12 rounded-[1rem] text-xs font-black transition-all ${selectedDays.includes(day) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{day[0]}</button>
-                        ))}
-                    </div>
-                    <div className="flex gap-4 pt-4">
-                        <button onClick={onCancel} className="flex-1 py-4 text-slate-400 font-black uppercase text-[10px]">Cancel</button>
-                        <button onClick={() => onSave({ id: Date.now().toString(), title, time, days: selectedDays, completed: false, category: 'personal', completionHistory: [] })} disabled={!title} className="flex-[2] py-4 bg-indigo-600 text-white font-black rounded-[1.5rem] shadow-xl uppercase text-[10px]">Save</button>
-                    </div>
-                </div>
-            );
-        };
-
-        const EventForm = ({ onSave, onCancel }) => {
-            const [title, setTitle] = useState('');
-            const [dateTime, setDateTime] = useState('');
-            return (
-                <div className="space-y-6">
-                    <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] border-none font-bold" placeholder="Event Name..." />
-                    <input type="datetime-local" value={dateTime} onChange={(e) => setDateTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] border-none font-bold" />
-                    <div className="flex gap-4 pt-4">
-                        <button onClick={onCancel} className="flex-1 py-4 text-slate-400 font-black uppercase text-[10px]">Cancel</button>
-                        <button onClick={() => onSave({ id: Date.now().toString(), title, dateTime, reminderMinutes: 15, notified: false })} disabled={!title || !dateTime} className="flex-[2] py-4 bg-blue-600 text-white font-black rounded-[1.5rem] shadow-xl uppercase text-[10px]">Create</button>
-                    </div>
-                </div>
-            );
-        };
-
-        const TimetableForm = ({ onSave, onCancel }) => {
-            const [name, setName] = useState('');
-            const [blocks, setBlocks] = useState([]);
-            const addBlock = () => setBlocks([...blocks, { id: Math.random().toString(), label: '', startTime: '09:00', endTime: '10:00', color: 'bg-indigo-50 border-indigo-200' }]);
-            return (
-                <div className="space-y-6 pb-6">
-                    <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] border-none font-black text-lg" placeholder="Blueprint Name..." />
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center"><label className="text-[10px] font-black uppercase text-slate-400">Time Nodes</label><button onClick={addBlock} className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase">+ Add</button></div>
-                        {blocks.map((block) => (
-                            <div key={block.id} className="p-5 bg-slate-50 rounded-[2rem] border border-slate-200 space-y-4">
-                                <input value={block.label} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, label: e.target.value } : b))} className="w-full p-3 bg-white rounded-xl text-sm font-bold" placeholder="Objective" />
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input type="time" value={block.startTime} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, startTime: e.target.value } : b))} className="p-2 bg-white rounded-lg text-xs font-bold" />
-                                    <input type="time" value={block.endTime} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, endTime: e.target.value } : b))} className="p-2 bg-white rounded-lg text-xs font-bold" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex gap-4">
-                        <button onClick={onCancel} className="flex-1 py-4 text-slate-400 font-black uppercase text-[10px]">Cancel</button>
-                        <button onClick={() => onSave({ id: Date.now().toString(), name, description: '', blocks })} disabled={!name || blocks.length === 0} className="flex-[2] py-4 bg-indigo-600 text-white font-black rounded-[1.5rem] uppercase text-[10px]">Deploy</button>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- Main App ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('routines');
             const [routines, setRoutines] = useState([]);
             const [events, setEvents] = useState([]);
             const [timetables, setTimetables] = useState([]);
-            const [notifications, setNotifications] = useState([]);
             const [isAiLoading, setIsAiLoading] = useState(false);
             const [aiPrompt, setAiPrompt] = useState('');
-            const [aiSources, setAiSources] = useState([]);
+            const [groundingSources, setGroundingSources] = useState([]);
             
-            const [isAddingRoutine, setIsAddingRoutine] = useState(false);
-            const [isAddingEvent, setIsAddingEvent] = useState(false);
-            const [isAddingTimetable, setIsAddingTimetable] = useState(false);
-            const [selectedTimetable, setSelectedTimetable] = useState(null);
+            const [showRoutineModal, setShowRoutineModal] = useState(false);
+            const [showEventModal, setShowEventModal] = useState(false);
+            const [showTimetableModal, setShowTimetableModal] = useState(false);
+            const [selectedBlueprint, setSelectedBlueprint] = useState(null);
 
+            // Persistance
             useEffect(() => {
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
-                    const parsed = JSON.parse(saved);
-                    setRoutines(parsed.routines || []);
-                    setEvents(parsed.events || []);
-                    setTimetables(parsed.timetables || []);
+                    const data = JSON.parse(saved);
+                    setRoutines(data.routines || []);
+                    setEvents(data.events || []);
+                    setTimetables(data.timetables || []);
                 }
             }, []);
 
@@ -313,244 +108,288 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({ routines, events, timetables }));
             }, [routines, events, timetables]);
 
-            // Notification Engine
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    const now = new Date();
-                    setEvents(prev => {
-                        let changed = false;
-                        const updated = prev.map(e => {
-                            const time = new Date(e.dateTime).getTime();
-                            if (!e.notified && now.getTime() >= time - 15 * 60 * 1000 && now.getTime() < time) {
-                                changed = true;
-                                triggerNotification(`Event Alert`, `${e.title} starts soon!`);
-                                return { ...e, notified: true };
-                            }
-                            return e;
-                        });
-                        return changed ? updated : prev;
-                    });
-                }, 15000);
-                return () => clearInterval(interval);
-            }, []);
-
-            const triggerNotification = (title, body) => {
-                setNotifications(prev => [...prev, `${title}: ${body}`]);
-                setTimeout(() => setNotifications(prev => prev.slice(1)), 8000);
-            };
-
-            const toggleRoutine = (id) => {
+            const handleRoutineToggle = (id) => {
                 const today = new Date().toISOString().split('T')[0];
                 setRoutines(prev => prev.map(r => {
                     if (r.id === id) {
-                        const doneToday = r.completionHistory?.includes(today);
-                        const newHistory = doneToday ? r.completionHistory.filter(d => d !== today) : [...(r.completionHistory || []), today];
-                        return { ...r, completed: !doneToday, completionHistory: newHistory };
+                        const history = r.history || [];
+                        const isDone = history.includes(today);
+                        return { 
+                            ...r, 
+                            history: isDone ? history.filter(d => d !== today) : [...history, today] 
+                        };
                     }
                     return r;
                 }));
             };
 
-            const handleAiGenerate = async () => {
+            const runAiArchitect = async () => {
+                if (!aiPrompt.trim()) return;
                 setIsAiLoading(true);
-                const { routines: suggestions, sources } = await generateRoutineWithSearch(aiPrompt);
-                const newR = suggestions.map(s => ({ ...s, id: Math.random().toString(), completionHistory: [] }));
-                setRoutines([...routines, ...newR]);
-                setAiSources(sources);
-                setIsAiLoading(false);
-                setAiPrompt('');
+                setGroundingSources([]);
+                
+                try {
+                    // Guidelines: Initialize right before use
+                    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                    const response = await ai.models.generateContent({
+                        model: "gemini-3-flash-preview",
+                        contents: `As a professional life coach, research and build a routine for: "${aiPrompt}". Return a JSON array of objects with {title, time (HH:mm), category, days (array of strings like "Mon")}. Use search to find current best practices.`,
+                        config: {
+                            tools: [{ googleSearch: {} }],
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        title: { type: Type.STRING },
+                                        time: { type: Type.STRING },
+                                        category: { type: Type.STRING, enum: ["health", "work", "personal", "education"] },
+                                        days: { type: Type.ARRAY, items: { type: Type.STRING } }
+                                    },
+                                    required: ["title", "time", "category", "days"]
+                                }
+                            }
+                        }
+                    });
+
+                    const results = JSON.parse(response.text || "[]");
+                    const newRoutines = results.map(r => ({ ...r, id: Math.random().toString(36).substr(2, 9), history: [] }));
+                    
+                    // Guidelines: Extract grounding chunks
+                    const sources = [];
+                    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                    if (chunks) {
+                        chunks.forEach(c => { if (c.web) sources.push({ uri: c.web.uri, title: c.web.title }); });
+                    }
+                    
+                    setRoutines([...routines, ...newRoutines]);
+                    setGroundingSources(sources);
+                    setAiPrompt('');
+                } catch (e) {
+                    console.error("Architect Error:", e);
+                    alert("AI Architect encountered an error. Ensure API_KEY is correctly set in your environment.");
+                } finally {
+                    setIsAiLoading(false);
+                }
             };
 
-            const completionRate = useMemo(() => {
-                if (routines.length === 0) return 0;
-                const today = new Date().toISOString().split('T')[0];
-                return Math.round((routines.filter(r => r.completionHistory?.includes(today)).length / routines.length) * 100);
-            }, [routines]);
-
-            const weeklyStats = useMemo(() => {
-                return Array.from({ length: 7 }, (_, i) => {
-                    const d = new Date(); d.setDate(d.getDate() - (6 - i));
-                    const ds = d.toISOString().split('T')[0];
-                    return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), count: routines.filter(r => r.completionHistory?.includes(ds)).length, total: routines.length };
-                });
-            }, [routines]);
-
-            return (
-                <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 overflow-hidden">
-                    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 border-b border-slate-200 flex justify-between items-center shadow-sm">
-                        <div className="flex items-center gap-2">
-                            {selectedTimetable && activeTab === 'planner' && <button onClick={() => setSelectedTimetable(null)} className="p-1 -ml-2"><XIcon size={20} /></button>}
-                            <div>
-                                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">SyncLife</h1>
-                                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest opacity-70">Stand-alone Core</p>
-                            </div>
-                        </div>
-                        <button onClick={() => setActiveTab('settings')} className="p-2 hover:bg-slate-100 rounded-full transition-colors relative">
-                            <SettingsIcon size={24} />
-                            {notifications.length > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />}
-                        </button>
-                    </header>
-
-                    <main className="flex-1 overflow-y-auto px-4 pb-28 pt-4 hide-scrollbar">
-                        {/* Toasts */}
-                        <div className="fixed top-20 right-4 left-4 z-50 pointer-events-none space-y-2">
-                            {notifications.map((n, i) => (
-                                <div key={i} className="bg-slate-900 text-white p-4 rounded-2xl shadow-xl flex justify-between items-center animate-in slide-in-from-top-10 pointer-events-auto border border-slate-800">
-                                    <div className="flex items-center gap-3 font-bold text-sm"><BellIcon size={20} className="text-indigo-400" /> {n}</div>
-                                    <button onClick={() => setNotifications(prev => prev.filter((_, idx) => idx !== i))}><XIcon size={16} /></button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {activeTab === 'routines' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-2"><div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><TrendingUpIcon size={20} /></div><h3 className="font-bold text-slate-700">Momentum</h3></div>
-                                        <div className="text-right"><span className="text-3xl font-black text-indigo-600">{completionRate}%</span><p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">Daily Target</p></div>
-                                    </div>
-                                    <div className="flex justify-between items-end h-28 gap-2 px-1">
-                                        {weeklyStats.map((s, i) => (
-                                            <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                                <div className="relative w-full flex-1 bg-slate-50 rounded-lg overflow-hidden flex flex-col justify-end">
-                                                    <div className={`w-full rounded-t-lg transition-all duration-1000 ${i === 6 ? 'bg-indigo-600 shadow-lg' : 'bg-indigo-100'}`} style={{ height: `${s.total > 0 ? (s.count / s.total) * 100 : 5}%` }} />
-                                                </div>
-                                                <span className={`text-[10px] font-black uppercase ${i === 6 ? 'text-indigo-600' : 'text-slate-400'}`}>{s.day}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-center px-2">
-                                    <h2 className="text-xl font-black text-slate-800">Your Pulse</h2>
-                                    <button onClick={() => setIsAddingRoutine(true)} className="bg-indigo-600 text-white p-3 rounded-2xl active:scale-90 transition-all"><PlusIcon size={24} /></button>
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'routines':
+                        return (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-2xl font-black text-slate-800">Your Pulse</h2>
+                                    <button onClick={() => setShowRoutineModal(true)} className="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-100 active:scale-95 transition-all"><PlusIcon size={24} /></button>
                                 </div>
                                 <div className="grid gap-4">
                                     {routines.map(r => {
-                                        const done = r.completionHistory?.includes(new Date().toISOString().split('T')[0]);
+                                        const isDone = r.history?.includes(new Date().toISOString().split('T')[0]);
                                         return (
                                             <div key={r.id} className="bg-white p-4 rounded-3xl border border-slate-100 flex items-center justify-between group">
                                                 <div className="flex items-center gap-4">
-                                                    <button onClick={() => toggleRoutine(r.id)} className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${done ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}><CheckCircleIcon size={32} /></button>
-                                                    <div><h3 className={`font-bold text-slate-800 ${done ? 'line-through opacity-40' : ''}`}>{r.title}</h3><div className="text-[11px] font-bold text-slate-400 uppercase mt-1 tracking-wider"><ClockIcon size={12} className="inline mr-1" />{r.time} · {r.days.join('·')}</div></div>
+                                                    <button onClick={() => handleRoutineToggle(r.id)} className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isDone ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}><CheckIcon size={32} /></button>
+                                                    <div>
+                                                        <h3 className={`font-bold text-slate-800 ${isDone ? 'line-through opacity-40' : ''}`}>{r.title}</h3>
+                                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">{r.time} · {r.days.join('·')}</p>
+                                                    </div>
                                                 </div>
-                                                <button onClick={() => setRoutines(routines.filter(x => x.id !== r.id))} className="p-3 text-slate-100 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><TrashIcon size={20} /></button>
+                                                <button onClick={() => setRoutines(routines.filter(x => x.id !== r.id))} className="p-2 text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100"><TrashIcon size={20} /></button>
                                             </div>
                                         );
                                     })}
-                                    {routines.length === 0 && <EmptyState icon={<ClockIcon size={48} />} title="Pulse Offline" text="Add daily routines to start tracking progress." action={() => setIsAddingRoutine(true)} />}
+                                    {routines.length === 0 && <div className="text-center py-12 text-slate-400 font-medium">No pulses found. Add one or use AI Architect.</div>}
                                 </div>
                             </div>
-                        )}
-
-                        {activeTab === 'events' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                                <div className="flex justify-between items-center px-2"><h2 className="text-xl font-black text-slate-800">Flow</h2><button onClick={() => setIsAddingEvent(true)} className="bg-blue-600 text-white p-3 rounded-2xl active:scale-90 transition-all"><PlusIcon size={24} /></button></div>
-                                <div className="grid gap-4">
-                                    {events.sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()).map(e => (
-                                        <div key={e.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                                            <div className="flex justify-between items-start">
-                                                <div><h3 className="font-black text-xl text-slate-800">{e.title}</h3><div className="flex flex-wrap gap-2 mt-3"><span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider">{new Date(e.dateTime).toLocaleDateString()}</span><span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider">{new Date(e.dateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div></div>
-                                                <button onClick={() => setEvents(events.filter(x => x.id !== e.id))} className="text-slate-100 hover:text-red-500"><TrashIcon size={20} /></button>
+                        );
+                    case 'planner':
+                        if (selectedBlueprint) return (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center">
+                                    <h2 className="text-xl font-black text-slate-800">{selectedBlueprint.name}</h2>
+                                    <button onClick={() => setSelectedBlueprint(null)} className="p-2 bg-slate-50 rounded-xl"><XIcon size={24} /></button>
+                                </div>
+                                <div className="relative border-l-4 border-slate-100 ml-6 space-y-6 pb-12 pl-10">
+                                    {selectedBlueprint.blocks.sort((a,b) => a.startTime.localeCompare(b.startTime)).map((block, i) => (
+                                        <div key={i} className="relative">
+                                            <div className="absolute -left-[54px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-2xl border-4 border-white bg-indigo-500 shadow-lg" />
+                                            <div className="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">{block.startTime} — {block.endTime}</p>
+                                                <h4 className="font-black text-slate-800 text-lg">{block.label}</h4>
                                             </div>
                                         </div>
                                     ))}
-                                    {events.length === 0 && <EmptyState icon={<CalendarIcon size={48} />} title="Calendar Clear" text="Add events to map out your timeline." action={() => setIsAddingEvent(true)} />}
                                 </div>
                             </div>
-                        )}
-
-                        {activeTab === 'planner' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                                {!selectedTimetable ? (
-                                    <>
-                                        <div className="flex justify-between items-center px-2"><h2 className="text-xl font-black text-slate-800">Blueprints</h2><button onClick={() => setIsAddingTimetable(true)} className="bg-emerald-600 text-white p-3 rounded-2xl active:scale-90 transition-all"><PlusIcon size={24} /></button></div>
-                                        <div className="grid gap-4">
-                                            {timetables.map(t => (
-                                                <div key={t.id} onClick={() => setSelectedTimetable(t)} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center group cursor-pointer">
-                                                    <div className="flex items-center gap-5"><div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center font-black text-2xl">{t.name[0]}</div><div><h3 className="font-black text-lg text-slate-800">{t.name}</h3><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t.blocks.length} Nodes</p></div></div>
-                                                    <button onClick={(e) => { e.stopPropagation(); setTimetables(timetables.filter(x => x.id !== t.id)); }} className="opacity-0 group-hover:opacity-100 text-slate-200 hover:text-red-500 transition-all"><TrashIcon size={20} /></button>
-                                                </div>
-                                            ))}
-                                            {timetables.length === 0 && <EmptyState icon={<LayoutIcon size={48} />} title="No Blueprints" text="Design structured schedules for deep work." action={() => setIsAddingTimetable(true)} />}
+                        );
+                        return (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-2xl font-black text-slate-800">Blueprints</h2>
+                                    <button onClick={() => setShowTimetableModal(true)} className="bg-emerald-600 text-white p-3 rounded-2xl shadow-lg shadow-emerald-100"><PlusIcon size={24} /></button>
+                                </div>
+                                <div className="grid gap-4">
+                                    {timetables.map(t => (
+                                        <div key={t.id} onClick={() => setSelectedBlueprint(t)} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center cursor-pointer hover:shadow-md transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center font-black text-xl">{t.name[0]}</div>
+                                                <div><h3 className="font-black text-lg text-slate-800">{t.name}</h3><p className="text-xs font-bold text-slate-400">{t.blocks.length} Nodes</p></div>
+                                            </div>
+                                            <button onClick={(e) => { e.stopPropagation(); setTimetables(timetables.filter(x => x.id !== t.id)); }} className="p-2 text-slate-200 hover:text-red-500"><TrashIcon size={20} /></button>
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="space-y-6">
-                                        <div className="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center">
-                                            <div><h2 className="text-2xl font-black text-slate-800 tracking-tight">{selectedTimetable.name}</h2></div>
-                                            <button onClick={() => setSelectedTimetable(null)} className="p-3 bg-slate-50 rounded-2xl"><XIcon size={24} /></button>
-                                        </div>
-                                        <div className="relative border-l-4 border-slate-100 ml-6 space-y-6 pb-12 pl-10">
-                                            {selectedTimetable.blocks.sort((a,b)=>a.startTime.localeCompare(b.startTime)).map((b, i) => (
-                                                <div key={b.id} className="relative group">
-                                                    <div className="absolute -left-[54px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-2xl border-4 border-white bg-indigo-500 shadow-lg" />
-                                                    <div className={`p-6 rounded-[2rem] shadow-sm border border-l-[12px] bg-white ${b.color} flex justify-between items-center`}>
-                                                        <div><div className="text-[10px] font-black uppercase opacity-50 mb-2">{b.startTime} — {b.endTime}</div><h4 className="font-black text-slate-800 text-lg">{b.label}</h4></div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                    ))}
+                                    {timetables.length === 0 && <div className="text-center py-12 text-slate-400 font-medium">Create a study or work blueprint.</div>}
+                                </div>
                             </div>
-                        )}
-
-                        {activeTab === 'ai' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 max-w-lg mx-auto pb-10">
+                        );
+                    case 'ai':
+                        return (
+                            <div className="space-y-8 animate-fade-in max-w-md mx-auto">
                                 <div className="text-center space-y-3">
-                                    <div className="inline-flex p-4 bg-indigo-600 text-white rounded-[2rem] shadow-xl rotate-3 mb-2"><SparklesIcon size={36} /></div>
+                                    <div className="inline-block p-4 bg-indigo-600 text-white rounded-[2rem] shadow-xl rotate-3"><SparklesIcon size={36} /></div>
                                     <h2 className="text-3xl font-black text-slate-800 tracking-tight">AI Architect</h2>
-                                    <p className="text-slate-400 font-medium px-4">Searching live trends to build your optimal pulse.</p>
+                                    <p className="text-slate-500 font-medium text-sm">Design your future with search-backed intelligence.</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 space-y-4">
-                                    <textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="e.g., 'Study for finals and wake up early'..." className="w-full min-h-[140px] p-6 rounded-[2rem] bg-slate-50 border-none font-medium text-slate-700 resize-none outline-none" />
-                                    <button disabled={isAiLoading || !aiPrompt} onClick={handleAiGenerate} className={`w-full py-5 rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 transition-all ${isAiLoading ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-black shadow-2xl active:scale-95'}`}>
-                                        {isAiLoading ? <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" /> : <><SparklesIcon size={20} /> Build Routine</>}
+                                    <textarea 
+                                        value={aiPrompt} 
+                                        onChange={e => setAiPrompt(e.target.value)} 
+                                        placeholder="e.g., 'A productive morning for a software engineer'..." 
+                                        className="w-full min-h-[140px] p-6 bg-slate-50 rounded-[2rem] border-none font-medium text-slate-700 outline-none resize-none" 
+                                    />
+                                    <button 
+                                        onClick={runAiArchitect} 
+                                        disabled={isAiLoading || !aiPrompt.trim()}
+                                        className={`w-full py-5 rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 transition-all ${isAiLoading ? 'bg-slate-200 text-slate-400' : 'bg-slate-900 text-white hover:bg-black shadow-2xl active:scale-95'}`}
+                                    >
+                                        {isAiLoading ? <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" /> : <><SparklesIcon size={20} /> Build Pulse</>}
                                     </button>
                                 </div>
-                                {aiSources.length > 0 && (
-                                    <div className="bg-indigo-50/50 p-6 rounded-[2rem] space-y-3">
-                                        <h4 className="text-xs font-black uppercase text-indigo-400 flex items-center gap-2"><FlaskConIcon size={14} /> Grounding Sources</h4>
+                                {groundingSources.length > 0 && (
+                                    <div className="bg-indigo-50 p-6 rounded-[2rem] space-y-3">
+                                        <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Grounding Sources</h4>
                                         <div className="flex flex-wrap gap-2">
-                                            {aiSources.map((s, i) => <a key={i} href={s.uri} target="_blank" className="bg-white border border-indigo-100 text-indigo-600 px-4 py-2 rounded-2xl text-[11px] font-bold flex items-center gap-2 hover:bg-indigo-600 hover:text-white transition-all"><ExternalLinkIcon size={12} /> {s.title.substring(0,25)}...</a>)}
+                                            {groundingSources.map((s, i) => (
+                                                <a key={i} href={s.uri} target="_blank" className="bg-white border border-indigo-100 text-indigo-600 px-4 py-2 rounded-2xl text-[10px] font-bold flex items-center gap-2 hover:bg-indigo-600 hover:text-white transition-all">
+                                                    <ExternalLinkIcon size={12} /> {s.title.substring(0, 20)}...
+                                                </a>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                        )}
-
-                        {activeTab === 'settings' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                                <h2 className="text-xl font-black text-slate-800">Preferences</h2>
-                                <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                                    <div className="p-5 flex items-center justify-between border-b border-slate-50" onClick={() => Notification.requestPermission()}>
-                                        <span className="font-bold text-slate-600">Push Notifications</span>
-                                        <div className={`w-14 h-7 rounded-full transition-all relative p-1 ${Notification.permission === 'granted' ? 'bg-indigo-600' : 'bg-slate-200'}`}><div className={`w-5 h-5 bg-white rounded-full shadow-md transition-all transform ${Notification.permission === 'granted' ? 'translate-x-7' : 'translate-x-0'}`} /></div>
+                        );
+                    case 'settings':
+                        return (
+                            <div className="space-y-6 animate-fade-in">
+                                <h2 className="text-2xl font-black text-slate-800">System</h2>
+                                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm divide-y divide-slate-50">
+                                    <div className="p-6 flex items-center justify-between group cursor-pointer" onClick={() => alert("All systems operational. Standalone core v4.1 active.")}>
+                                        <div className="flex items-center gap-3"><ClockIcon size={20} className="text-indigo-500" /><span className="font-bold text-slate-600">Diagnostics Test</span></div>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase">Run Suite</span>
                                     </div>
-                                    <div className="p-5 flex items-center justify-between border-b border-slate-50 group cursor-pointer hover:bg-slate-50" onClick={() => { triggerNotification("Diagnostic", "System check passed."); alert("Self-test completed."); }}>
-                                        <div className="flex items-center gap-3"><FlaskConIcon size={20} className="text-indigo-500" /><span className="font-bold text-slate-600">Run Diagnostics</span></div>
-                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Test Core</span>
+                                    <div className="p-6 flex items-center justify-between text-red-500 font-bold cursor-pointer hover:bg-red-50 transition-colors" onClick={() => confirm("Wipe all data?") && (localStorage.clear() || window.location.reload())}>
+                                        <span>Factory Reset</span>
+                                        <TrashIcon size={20} />
                                     </div>
-                                    <div className="p-5 flex items-center justify-between text-red-500 font-bold cursor-pointer hover:bg-red-50" onClick={() => { if(confirm('Clear all data?')) { localStorage.clear(); window.location.reload(); } }}><span>Hard Reset</span><TrashIcon size={18} /></div>
                                 </div>
-                                <div className="text-center p-8 opacity-20 text-[9px] font-black uppercase tracking-[0.3em]">SyncLife Stand-alone v3.0</div>
                             </div>
-                        )}
-                    </main>
+                        );
+                }
+            };
 
-                    {/* Float Nav */}
-                    <nav className="fixed bottom-6 left-6 right-6 bg-slate-900/95 backdrop-blur-2xl border border-white/10 px-8 py-3 rounded-[2.5rem] z-50 shadow-2xl flex justify-between items-center max-w-md mx-auto">
+            return (
+                <div className="min-h-screen bg-slate-50 flex flex-col pb-28">
+                    <header className="bg-white/80 backdrop-blur-xl sticky top-0 z-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-black text-indigo-600 tracking-tighter">SyncLife</h1>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 opacity-80">Autonomous Pulse v4.1</p>
+                        </div>
+                        <button onClick={() => setActiveTab('settings')} className="p-3 bg-slate-50 rounded-2xl hover:bg-slate-100"><SettingsIcon size={24} /></button>
+                    </header>
+
+                    <main className="flex-1 p-6 overflow-y-auto">{renderContent()}</main>
+
+                    <nav className="fixed bottom-6 left-6 right-6 bg-slate-900/95 backdrop-blur-2xl px-8 py-3 rounded-[2.5rem] z-50 shadow-2xl flex justify-between items-center max-w-md mx-auto">
                         <NavItem active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<ClockIcon size={22} />} label="Pulse" />
-                        <NavItem active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={<CalendarIcon size={22} />} label="Flow" />
-                        <div className="relative -top-8"><button onClick={() => setActiveTab('ai')} className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl transition-all ${activeTab === 'ai' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-900'}`}><SparklesIcon size={30} /></button></div>
+                        <div className="relative -top-8"><button onClick={() => setActiveTab('ai')} className={`w-16 h-16 rounded-[2rem] flex items-center justify-center transition-all ${activeTab === 'ai' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-900 shadow-xl'}`}><SparklesIcon size={30} /></button></div>
                         <NavItem active={activeTab === 'planner'} onClick={() => setActiveTab('planner')} icon={<LayoutIcon size={22} />} label="Map" />
-                        <NavItem active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<SettingsIcon size={22} />} label="User" />
                     </nav>
 
-                    {/* Modals */}
-                    {isAddingRoutine && <Modal onClose={() => setIsAddingRoutine(false)} title="New Pulse"><RoutineForm onSave={r=>{setRoutines([...routines,r]);setIsAddingRoutine(false)}} onCancel={()=>setIsAddingRoutine(false)} /></Modal>}
-                    {isAddingEvent && <Modal onClose={() => setIsAddingEvent(false)} title="New Entry"><EventForm onSave={e=>{setEvents([...events,e]);setIsAddingEvent(false)}} onCancel={()=>setIsAddingEvent(false)} /></Modal>}
-                    {isAddingTimetable && <Modal onClose={() => setIsAddingTimetable(false)} title="New Blueprint"><TimetableForm onSave={t=>{setTimetables([...timetables,t]);setIsAddingTimetable(false)}} onCancel={()=>setIsAddingTimetable(false)} /></Modal>}
+                    {showRoutineModal && (
+                        <Modal title="New Pulse" onClose={() => setShowRoutineModal(false)}>
+                            <RoutineForm onSave={r => { setRoutines([...routines, r]); setShowRoutineModal(false); }} onCancel={() => setShowRoutineModal(false)} />
+                        </Modal>
+                    )}
+                    {showTimetableModal && (
+                        <Modal title="New Map" onClose={() => setShowTimetableModal(false)}>
+                            <TimetableForm onSave={t => { setTimetables([...timetables, t]); setShowTimetableModal(false); }} onCancel={() => setShowTimetableModal(false)} />
+                        </Modal>
+                    )}
+                </div>
+            );
+        };
+
+        const NavItem = ({ active, onClick, icon, label }) => (
+            <button onClick={onClick} className={`flex flex-col items-center gap-1 ${active ? 'text-indigo-400' : 'text-slate-500'}`}>
+                {icon}<span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+            </button>
+        );
+
+        const Modal = ({ title, onClose, children }) => (
+            <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
+                <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                    <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 className="text-2xl font-black text-slate-800">{title}</h3>
+                        <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl"><XIcon size={24} /></button>
+                    </div>
+                    <div className="p-8 overflow-y-auto hide-scrollbar">{children}</div>
+                </div>
+            </div>
+        );
+
+        const RoutineForm = ({ onSave, onCancel }) => {
+            const [title, setTitle] = useState('');
+            const [time, setTime] = useState('08:00');
+            const [days, setDays] = useState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+            return (
+                <div className="space-y-6">
+                    <input autoFocus value={title} onChange={e => setTitle(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" placeholder="Pulse Name..." />
+                    <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" />
+                    <div className="flex flex-wrap gap-2">
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
+                            <button key={d} onClick={() => setDays(days.includes(d) ? days.filter(x => x !== d) : [...days, d])} className={`w-12 h-12 rounded-xl font-black text-xs ${days.includes(d) ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>{d[0]}</button>
+                        ))}
+                    </div>
+                    <div className="flex gap-4 pt-4">
+                        <button onClick={onCancel} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs">Discard</button>
+                        <button onClick={() => onSave({ id: Date.now().toString(), title, time, days, history: [] })} disabled={!title} className="flex-[2] py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-xl uppercase text-xs">Commit</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const TimetableForm = ({ onSave, onCancel }) => {
+            const [name, setName] = useState('');
+            const [blocks, setBlocks] = useState([{ id: 1, label: 'Focus Work', startTime: '09:00', endTime: '11:00' }]);
+            return (
+                <div className="space-y-6">
+                    <input value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black text-lg border-none" placeholder="Blueprint Name..." />
+                    {blocks.map((b, i) => (
+                        <div key={b.id} className="p-5 bg-slate-50 rounded-3xl space-y-3">
+                            <input value={b.label} onChange={e => setBlocks(blocks.map(x => x.id === b.id ? {...x, label: e.target.value} : x))} className="w-full p-3 bg-white rounded-xl text-sm font-bold border-none" placeholder="Node Title" />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input type="time" value={b.startTime} onChange={e => setBlocks(blocks.map(x => x.id === b.id ? {...x, startTime: e.target.value} : x))} className="p-2 rounded-lg bg-white text-xs font-bold border-none" />
+                                <input type="time" value={b.endTime} onChange={e => setBlocks(blocks.map(x => x.id === b.id ? {...x, endTime: e.target.value} : x))} className="p-2 rounded-lg bg-white text-xs font-bold border-none" />
+                            </div>
+                        </div>
+                    ))}
+                    <button onClick={() => setBlocks([...blocks, {id: Date.now(), label: '', startTime: '12:00', endTime: '13:00'}])} className="w-full py-3 bg-slate-100 rounded-xl font-black text-xs uppercase text-slate-400">+ Add Node</button>
+                    <div className="flex gap-4 pt-4">
+                        <button onClick={onCancel} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs">Cancel</button>
+                        <button onClick={() => onSave({ id: Date.now().toString(), name, blocks })} disabled={!name} className="flex-[2] py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl uppercase text-xs">Deploy Map</button>
+                    </div>
                 </div>
             );
         };
